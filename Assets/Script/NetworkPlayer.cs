@@ -8,7 +8,7 @@ public class NetworkPlayer : NetworkBehaviour
     public Transform leftHand;
     public Transform rightHand;
     public Renderer[] meshToDisable;
-    bool own;
+    
 
 
     public override void OnNetworkSpawn()
@@ -22,7 +22,7 @@ public class NetworkPlayer : NetworkBehaviour
                 item.enabled = false;
             }
 
-            own = true;
+            
         }
     }
 
@@ -30,7 +30,7 @@ public class NetworkPlayer : NetworkBehaviour
     void Update()
     {
         
-        if(own)
+        if(IsOwner)
         {
             root.position = VRRigReferences.singleton.root.position;
             head.position = VRRigReferences.singleton.head.position;
