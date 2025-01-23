@@ -8,12 +8,12 @@ public class TargetScript : MonoBehaviour
     [Tooltip("The maximum height, expressed as a multiplier of the character's height.")]
     public int MaxHeightMultiplier = 2;
     public bool showDebugMessages = true;
-    public int numberOfModes = 3;
+    public int numberOfModes = 4;
     public float lifespan;
     GameObject playArea;
     GameObject player;
     Renderer playRenderer;
-    int Mode;
+    public int Mode;
     List<Vector3> points;
     bool isMoving = false;
     public float moveSpeed = 10;
@@ -58,6 +58,7 @@ public class TargetScript : MonoBehaviour
         switch (Mode)
         {
             case 1://default
+                DisableRigidBody();
             SetRandomPosition();
 
             break;
@@ -70,11 +71,13 @@ public class TargetScript : MonoBehaviour
             break;
 
             case 3://Random Scale
+            DisableRigidBody();
             SetRandomPosition();
             RandomizeScale();
             break;
 
             case 4: //Moving to points
+            DisableRigidBody();
             SetRandomPosition();
             points = GenerateRandomPoints(5);
             isMoving = true;
@@ -107,6 +110,8 @@ public class TargetScript : MonoBehaviour
         {
             rb.isKinematic = false; // Enable physics interactions by disabling kinematic mode
             DebugMessage("Rigidbody enabled.");
+            DebugMessage($"Mode: {Mode}, isKinematic: {rb.isKinematic}");
+
         }
         else
         {
@@ -121,7 +126,9 @@ public class TargetScript : MonoBehaviour
         if (rb != null)
         {
             rb.isKinematic = true; // Enable physics interactions by disabling kinematic mode
-            DebugMessage("Rigidbody enabled.");
+            DebugMessage("Rigidbody disabled.");
+            DebugMessage($"Mode: {Mode}, isKinematic: {rb.isKinematic}");
+
         }
         else
         {

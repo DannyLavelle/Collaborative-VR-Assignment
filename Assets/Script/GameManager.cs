@@ -95,11 +95,27 @@ public class GameManager : NetworkBehaviour
             if (networkObject != null && networkObject.IsSpawned)
             {
                 networkObject.Despawn(false); // NOTE TO SELF PUT FALSE HERE SO OBJECT DOESN'T DESPAWN THIS ERROR TOOK ME 2 HOURS TO FIX!!!
-                obj.SetActive(true);
+                //obj.SetActive(true);
             }
         }
 
         pool.ReturnItem(obj); // Return to the pool
     }
+
+    public void ReturnBullet(GameObject obj, Pooler pooler)
+    {
+        if (IsOwner)
+        {
+            var networkObject = obj.GetComponent<NetworkObject>();
+            if (networkObject != null && networkObject.IsSpawned)
+            {
+                networkObject.Despawn(false);
+
+            }
+        }
+        Debug.Log("Despawn bullet");
+        pooler.ReturnItem(obj);
+    }
+
 
 }

@@ -6,7 +6,7 @@ public class VRRigReferences : MonoBehaviour
 
     public Transform root;
     public Transform head;
-    public Transform leftHand;
+    //public Transform leftHand;
     public Transform rightHand;
 
 
