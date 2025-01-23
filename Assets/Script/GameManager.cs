@@ -1,16 +1,18 @@
 using UnityEngine;
 using Unity.Netcode;
 using XRMultiplayer;
+using UnityEngine.UIElements;
 
 public class GameManager : NetworkBehaviour
 {
     public static GameManager Instance;
  
     public Pooler pool;
-
+    GameObject bulletSpawned;
     private float timer = 0;
     public float spawnInterval = 10;
-
+    Pooler ammoPool;
+    GameObject bullet;
     private void Awake()
     {
         Instance = this;
@@ -65,19 +67,7 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-    [ClientRpc]
-    public void DestroyTargetClientRpc()
-    {
-        // Destroy the target locally
-        GameObject target = GameObject.FindWithTag("Target");
-        if (target != null)
-        {
-            Destroy(target);
-        }
 
-        // Spawn a new target
-        SpawnTarget();
-    }
 
     private void SpawnTarget()
     {
@@ -102,6 +92,22 @@ public class GameManager : NetworkBehaviour
         pool.ReturnItem(obj); // Return to the pool
     }
 
+    //public GameObject SpawnBullet(Pooler pooler)
+    //{
+
+    //    if (!IsOwner )
+    //    {
+    //        Debug.LogWarning("Only the client that owns this object can request a spawn.");
+    //        return null;
+    //    }
+
+    //    // Call the ServerRpc to request the spawn
+    //    ammoPool = pooler;    
+        
+
+    //    return bullet;
+    //}
+
     public void ReturnBullet(GameObject obj, Pooler pooler)
     {
         if (IsOwner)
@@ -117,5 +123,15 @@ public class GameManager : NetworkBehaviour
         pooler.ReturnItem(obj);
     }
 
+   public void Ownership(ulong id,NetworkObject no)
+    {
+        //if (!IsHost) { return; }
+
+
+        Debug.Log("Switching");
+        
+        no.ChangeOwnership(id);
+
+    }
 
 }

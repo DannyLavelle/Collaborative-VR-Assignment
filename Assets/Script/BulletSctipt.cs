@@ -1,6 +1,8 @@
+using Unity.Netcode;
 using UnityEngine;
+using XRMultiplayer;
 
-public class BulletSctipt : MonoBehaviour
+public class BulletSctipt : NetworkBehaviour
 {
     public float timer;
     public float bulletLife = 5;
@@ -16,7 +18,10 @@ public class BulletSctipt : MonoBehaviour
         {
             timer = 0;
             Rigidbody rb = GetComponent<Rigidbody>();
-            rb.linearVelocity = Vector3.zero;
+            GameObject obj = GameObject.FindWithTag("AmmoPool");
+            Pooler pool = obj.GetComponent<Pooler>();
+            DespawnSelfServerRPC();
+            pool.ReturnItem(gameObject);
 
         }
     }
@@ -32,4 +37,12 @@ public class BulletSctipt : MonoBehaviour
     {
         Gun = obj;
     }
+    [ServerRpc(RequireOwnership = false)]
+    
+    void DespawnSelfServerRPC(ServerRpcParams serverRpcParams = default)
+    {
+        NetworkObject no = gameObject.GetComponent<NetworkObject>();
+        no.Despawn(false);
+    }
+
 }
