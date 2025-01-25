@@ -1,19 +1,21 @@
 using UnityEngine;
 using Unity.Netcode;
+using TMPro;
 
 public class NetworkPlayer : NetworkBehaviour
 {
     public Transform root;
     public Transform head;
-    public Transform leftHand;
+    public TMP_Text text;
     public Transform rightHand;
     public Renderer[] meshToDisable;
+
     
 
 
     public override void OnNetworkSpawn()
     {
-        Debug.Log($"Spawned Network Vr rig: {VRRigReferences.singleton}");
+       
 
         base.OnNetworkSpawn();
         if (IsOwner)
@@ -57,7 +59,17 @@ public class NetworkPlayer : NetworkBehaviour
             head.rotation = VRRigReferences.singleton.head.rotation;
             //leftHand.rotation = VRRigReferences.singleton.leftHand.rotation;
             rightHand.rotation = VRRigReferences.singleton.rightHand.rotation;
+
+
+            //text.text = GameManager.Instance.playerScores[OwnerClientId].ToString();
+            text.text = VRRigReferences.singleton.pointText.text;
+         
+
+      
         }
 
     }
+
+    
+
 }

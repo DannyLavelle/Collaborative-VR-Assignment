@@ -12,10 +12,12 @@ public class PointScript : MonoBehaviour
         //Instance = this;
     }
 
-    public void IncrementPoints()
+    public int IncrementPoints()
     {
         points++;
         pointScore.text = points.ToString();
+
+        return points;
     }
 
 }

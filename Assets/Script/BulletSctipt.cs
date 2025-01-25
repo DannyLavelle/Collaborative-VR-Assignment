@@ -1,4 +1,5 @@
 using Unity.Netcode;
+
 using UnityEngine;
 using XRMultiplayer;
 
@@ -8,6 +9,8 @@ public class BulletSctipt : NetworkBehaviour
     public float bulletLife = 5;
     GameObject Gun;
     public float maxSpeed = 20;
+
+    private ulong ownerClientId;
     private void Start()
     {
         Rigidbody rb = GetComponent<Rigidbody>();
@@ -24,10 +27,15 @@ public class BulletSctipt : NetworkBehaviour
            
        
             DespawnSelfServerRPC();
-            Destroy(gameObject);
+            //Destroy(gameObject);
             //pool.ReturnItem(gameObject);
 
         }
+    }
+
+    public void SetOwner(ulong clientId)
+    {
+        ownerClientId = clientId;
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -36,7 +44,8 @@ public class BulletSctipt : NetworkBehaviour
             Debug.Log("Hit");
             TargetScript targetScript = collision.gameObject.GetComponent<TargetScript>();
 
-            Gun.GetComponent<PointScript>().IncrementPoints();
+
+            addPoint(ownerClientId);
 
             targetScript.RemoveSelf();
         }
@@ -46,6 +55,11 @@ public class BulletSctipt : NetworkBehaviour
     {
         Gun = obj;
     }
+
+    public GameObject FindGun()
+    {
+        return GameObject.FindGameObjectWithTag("Gun");
+    }
     [ServerRpc(RequireOwnership = false)]
     
     void DespawnSelfServerRPC(ServerRpcParams serverRpcParams = default)
@@ -53,5 +67,41 @@ public class BulletSctipt : NetworkBehaviour
         NetworkObject no = gameObject.GetComponent<NetworkObject>();
         no.Despawn();
     }
+
+
+    public void addPoint(ulong clientId)
+    {
+        if (!IsHost)
+        {
+            return;
+        }
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        };
+
+        addpointClientRPC( clientId,clientRpcParams);
+
+    }
+
+    [ClientRpc]
+    public void addpointClientRPC(ulong clientId,ClientRpcParams clientRpcParams = default)
+    {
+
+        int score = GameObject.FindGameObjectWithTag("Gun").GetComponent<PointScript>().IncrementPoints();
+        UpdateScoringServerRPC(clientId, score);
+
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void UpdateScoringServerRPC(ulong clientId, int score, ServerRpcParams serverRpcParams = default)
+    {
+        GameManager.Instance.UpdateScores(clientId, score);
+    }
+
+
 
 }

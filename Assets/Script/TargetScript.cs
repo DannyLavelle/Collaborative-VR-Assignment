@@ -16,7 +16,7 @@ public class TargetScript : MonoBehaviour
     public int Mode;
     List<Vector3> points;
     bool isMoving = false;
-    public float moveSpeed = 10;
+    public float moveSpeed = 5;
     float objectHeight;
     float characterHeight;
     float minX, minY, maxX, maxY,minZ,maxZ;

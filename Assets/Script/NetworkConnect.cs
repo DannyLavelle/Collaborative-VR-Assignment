@@ -121,7 +121,7 @@ public class NetworkConnect : MonoBehaviour
                 reconnectionTimer = 0f;
 
                 Debug.Log("Not connected to any server as a client.");
-                //JoinOrCreate();
+                JoinOrCreate();
             }
         }
         else

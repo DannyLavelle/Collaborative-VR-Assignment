@@ -2,6 +2,10 @@ using UnityEngine;
 using Unity.Netcode;
 using XRMultiplayer;
 using UnityEngine.UIElements;
+using System.Collections.Generic;
+
+using UnityEngine.SocialPlatforms.Impl;
+
 
 public class GameManager : NetworkBehaviour
 {
@@ -13,6 +17,9 @@ public class GameManager : NetworkBehaviour
     public float spawnInterval = 10;
     Pooler ammoPool;
     GameObject bullet;
+
+    public Dictionary<ulong, int> playerScores = new Dictionary<ulong, int>();
+
     private void Awake()
     {
         Instance = this;
@@ -50,6 +57,11 @@ public class GameManager : NetworkBehaviour
 
     private void OnClientConnected(ulong clientId)
     {
+        if (!playerScores.ContainsKey(clientId))
+        {
+            playerScores[clientId] = 0; // Initialize score if not already present
+        }
+
         // If a new player connects, spawn the first target
         if (NetworkManager.Singleton.ConnectedClients.Count > 1)
         {
@@ -92,21 +104,6 @@ public class GameManager : NetworkBehaviour
         pool.ReturnItem(obj); // Return to the pool
     }
 
-    //public GameObject SpawnBullet(Pooler pooler)
-    //{
-
-    //    if (!IsOwner )
-    //    {
-    //        Debug.LogWarning("Only the client that owns this object can request a spawn.");
-    //        return null;
-    //    }
-
-    //    // Call the ServerRpc to request the spawn
-    //    ammoPool = pooler;    
-        
-
-    //    return bullet;
-    //}
 
     public void ReturnBullet(GameObject obj, Pooler pooler)
     {
@@ -123,15 +120,64 @@ public class GameManager : NetworkBehaviour
         pooler.ReturnItem(obj);
     }
 
-   public void Ownership(ulong id,NetworkObject no)
+
+
+
+    public void UpdateScores(ulong clientId, int points)
     {
-        //if (!IsHost) { return; }
+        if (!playerScores.ContainsKey(clientId))
+        {
+            playerScores[clientId] = 0; // Initialize score if not already present
+        }
 
 
-        Debug.Log("Switching");
-        
-        no.ChangeOwnership(id);
+        playerScores[clientId] = points;
 
+        foreach(var scores in playerScores)
+        {
+            Debug.Log($"Player {scores.Key} Score: {scores.Value}");
+            if(scores.Value >= 10)
+            {
+                Debug.Log($"Player {scores.Key} Wins");
+            }
+
+        }
+
+
+        UpdateOverhead(points, clientId);
+    }
+
+
+    void UpdateOverhead(int score, ulong clientId)
+    {
+        if (!IsHost)
+        {
+            return;
+        }
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        };
+
+       if (score >= 10)
+        {
+            UpdateOverheadClientRpc("Winner",clientRpcParams);
+        }
+        else
+        {
+            UpdateOverheadClientRpc(score.ToString(),clientRpcParams);
+        }
+    }
+
+    [ClientRpc]
+    void UpdateOverheadClientRpc(string score,ClientRpcParams clientRpcParams = default)
+    {
+
+       
+        //VRRigReferences.singleton.SetText(score);
     }
 
 

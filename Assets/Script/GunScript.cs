@@ -26,6 +26,7 @@ public class GunScript : NetworkBehaviour
 
 
     public GameObject bullet;
+    
     void Start()
     {
         currentAmmo = maxAmmo;
@@ -42,6 +43,11 @@ public class GunScript : NetworkBehaviour
 
         if(reloadTimer >= timeToReload)
         {
+            foreach (GameObject go in AmmoIndicators)
+            {
+                Renderer renderer = go.GetComponent<Renderer>();
+                renderer.material.color = Color.green;
+            }
             reloadTimer = 0;
             currentAmmo = maxAmmo;
         }
@@ -61,7 +67,7 @@ public class GunScript : NetworkBehaviour
         if (shoot.action.IsPressed() && !hasShot && currentAmmo != 0)
         {
             Shoot();
-            currentAmmo--;
+           DecrementAmmo();
           
             hasShot = true;
         }
@@ -69,11 +75,13 @@ public class GunScript : NetworkBehaviour
 
     public void DecrementAmmo()
     {
-        currentAmmo --;
+    
 
         Renderer renderer = AmmoIndicators[currentAmmo - 1].GetComponent<Renderer>();
+        
         renderer.material.color = Color.red;
-
+       
+        currentAmmo--;
     }
 
     public void Shoot()
@@ -113,7 +121,7 @@ public class GunScript : NetworkBehaviour
         no.Spawn(); 
 
         BulletSctipt bs = spawnBullet.GetComponent<BulletSctipt>();
-        bs.setGun(gameObject);
+        bs.SetOwner(serverRpcParams.Receive.SenderClientId);
 
         Debug.Log($"Bullet spawned at {clientPosition} with rotation {clientRotation}");
     }
