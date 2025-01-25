@@ -9,91 +9,79 @@ using XRMultiplayer;
 public class GunScript : NetworkBehaviour
 {
     public List<GameObject> AmmoIndicators;
-    private int maxAmmo, currentAmmo;
+    public int maxAmmo = 6;
+    public int currentAmmo;
     public InputActionProperty shoot;
-    public Transform Barrel;
+    public Transform firePoint;
     public GameObject ammoPool;
-    Pooler pool;
+   
     public float bulletSpeed = 20f;
     public float timer;
     public float shotCD = 1;
     private bool hasShot;
-    GameObject bullet;
+
+
+    public float reloadTimer;
+    public float timeToReload;
+
+
+    public GameObject bullet;
     void Start()
     {
-        pool = ammoPool.GetComponent<Pooler>();
-        //NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-
+        currentAmmo = maxAmmo;
     }
-    //private void OnConnectedToServer()
-    //{
-    //   if(!IsHost)
-    //    {
-    //        Debug.Log("Seitching");
-    //        NetworkObject no = gameObject.GetComponent<NetworkObject>();
-    //        no.ChangeOwnership(NetworkManager.Singleton.LocalClientId);
-    //    }
-    //}
-    //private void OnClientConnected(ulong clientId)
-    //{
-    //    Debug.Log($"Client connected: {clientId}");
-
-    //    if (!IsHost)
-    //    {
-    //        Debug.Log("Seitching");
-    //        NetworkObject no = gameObject.GetComponent<NetworkObject>();
-           
-    //        Debug.Log($"Switched ownere now is owner: {IsOwner}");
-    //        GameManager.Instance.Ownership(clientId,no);
-    //    }
-    //}
+ 
 
     private void Update()
     {
+
+        if (currentAmmo == 0)
+        {
+           reloadTimer += Time.deltaTime;
+        }
+
+        if(reloadTimer >= timeToReload)
+        {
+            reloadTimer = 0;
+            currentAmmo = maxAmmo;
+        }
+
+
         if (hasShot)
         {
             timer += Time.deltaTime;
         }
+
         if (timer >= shotCD)
         {
             timer = 0;
             hasShot = false;
         }
 
-        if (shoot.action.IsPressed() && !hasShot)
+        if (shoot.action.IsPressed() && !hasShot && currentAmmo != 0)
         {
             Shoot();
-            Debug.Log("Shoot");
+            currentAmmo--;
+          
             hasShot = true;
         }
     }
 
+    public void DecrementAmmo()
+    {
+        currentAmmo --;
+
+        Renderer renderer = AmmoIndicators[currentAmmo - 1].GetComponent<Renderer>();
+        renderer.material.color = Color.red;
+
+    }
+
     public void Shoot()
     {
-
-        //if (!IsOwner)
-        //{
-        //    Debug.Log("Not Owner");
-        //    return;
-        //}
-
-
-        SpawnObjectServerRpc(Barrel.transform.position,Barrel.transform.rotation);
-        
-        if (!IsHost)
-        {
-            
-        }
-
-        //bullet.transform.position = Barrel.position;
-        //bullet.transform.rotation = Barrel.rotation;
-
-        //Rigidbody rb = bullet.GetComponent<Rigidbody>();
-        //rb.linearVelocity = Barrel.forward * bulletSpeed;
-
-        //BulletSctipt bs = bullet.GetComponent<BulletSctipt>();
-
-        //bs.setGun(gameObject);
+        Vector3 clientPosition = firePoint.transform.position;
+        Quaternion clientRotation = firePoint.transform.rotation;
+        Debug.Log($"Client shooting from position: {clientPosition}, rotation: {clientRotation}");
+        SpawnObjectServerRpc(clientPosition, clientRotation);
     }
 
     public void ReturnBullet(GameObject obj, Pooler pool)
@@ -101,52 +89,37 @@ public class GunScript : NetworkBehaviour
         GameManager.Instance.ReturnBullet(obj, pool);
     }
 
-    [ServerRpc (RequireOwnership = false)]
-    private void SpawnObjectServerRpc(Vector3 position, Quaternion rotation, ServerRpcParams serverRpcParams = default)
+   
+
+    [ServerRpc(RequireOwnership = false)]
+    private void SpawnObjectServerRpc(Vector3 clientPosition, Quaternion clientRotation, ServerRpcParams serverRpcParams = default)
     {
-        // Ensure this method is only called on the server
         if (!IsServer)
         {
             Debug.LogError("This method should only be executed on the server.");
             return;
         }
 
-        // Get a bullet from the pool
-        bullet = pool.GetItem();
+        Debug.Log($"Server received spawn request at position: {clientPosition}, rotation: {clientRotation}");
+        GameObject spawnBullet = Instantiate(bullet, clientPosition, clientRotation);
 
-        if (bullet == null)
+        if (spawnBullet == null)
         {
-            Debug.LogError("Failed to get a bullet from the pool.");
+            Debug.LogError("Failed to instantiate the bullet.");
             return;
         }
 
-        // Get the NetworkObject component
-        NetworkObject no = bullet.GetComponent<NetworkObject>();
+        NetworkObject no = spawnBullet.GetComponent<NetworkObject>();
+        no.Spawn(); 
 
-        // Spawn the bullet with ownership assigned to the client that called this method
-        no.SpawnWithOwnership(OwnerClientId);
-
-        // Set the position and rotation of the bullet
-        bullet.transform.position = position;
-        bullet.transform.rotation = rotation;
-        Debug.Log($"Barrel transform = {position}");
-        Debug.Log($"Bullet rotation = {rotation}");
-
-        Rigidbody rb = bullet.GetComponent<Rigidbody>();
-        rb.linearVelocity = Barrel.forward * bulletSpeed;
-
-
-        //Vector3 velocity = Barrel.forward * bulletSpeed;
-        //SetBulletVelocityClientRpc(bullet.GetComponent<NetworkObject>(), velocity);
-
-        // Optional: Additional initialization for the bullet
-        BulletSctipt bs = bullet.GetComponent<BulletSctipt>();
+        BulletSctipt bs = spawnBullet.GetComponent<BulletSctipt>();
         bs.setGun(gameObject);
 
-        Debug.Log($"Bullet spawned at {position} with rotation {rotation}");
+        Debug.Log($"Bullet spawned at {clientPosition} with rotation {clientRotation}");
     }
 
-   
+
+
 
 
 }

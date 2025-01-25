@@ -7,9 +7,12 @@ public class BulletSctipt : NetworkBehaviour
     public float timer;
     public float bulletLife = 5;
     GameObject Gun;
+    public float maxSpeed = 20;
     private void Start()
     {
-        
+        Rigidbody rb = GetComponent<Rigidbody>();
+        rb.linearVelocity = gameObject.transform.forward * maxSpeed;
+
     }
     private void Update()
     {
@@ -17,11 +20,12 @@ public class BulletSctipt : NetworkBehaviour
         if(timer >= bulletLife)
         {
             timer = 0;
-            Rigidbody rb = GetComponent<Rigidbody>();
-            GameObject obj = GameObject.FindWithTag("AmmoPool");
-            Pooler pool = obj.GetComponent<Pooler>();
+            
+           
+       
             DespawnSelfServerRPC();
-            pool.ReturnItem(gameObject);
+            Destroy(gameObject);
+            //pool.ReturnItem(gameObject);
 
         }
     }
@@ -29,7 +33,12 @@ public class BulletSctipt : NetworkBehaviour
     {
         if(collision.gameObject.tag == "Target")
         {
-            Debug.LogError("Hit");
+            Debug.Log("Hit");
+            TargetScript targetScript = collision.gameObject.GetComponent<TargetScript>();
+
+            Gun.GetComponent<PointScript>().IncrementPoints();
+
+            targetScript.RemoveSelf();
         }
     }
 
@@ -42,7 +51,7 @@ public class BulletSctipt : NetworkBehaviour
     void DespawnSelfServerRPC(ServerRpcParams serverRpcParams = default)
     {
         NetworkObject no = gameObject.GetComponent<NetworkObject>();
-        no.Despawn(false);
+        no.Despawn();
     }
 
 }
